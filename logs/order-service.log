@@ -1,0 +1,12 @@
+2025-01-29 17:05:00,581 INFO o.s.b.StartupInfoLogger [main] Starting OrderApplication using Java 21.0.2 with PID 84640 (/Users/yashodhah/Projects/medium/spring-boot-observability/spring-boot-observability/order-service/target/classes started by yashodhah in /Users/yashodhah/Projects/medium/spring-boot-observability/spring-boot-observability)
+2025-01-29 17:05:00,582 INFO o.s.b.SpringApplication [main] No active profile set, falling back to 1 default profile: "default"
+2025-01-29 17:05:01,112 INFO o.s.b.w.e.t.TomcatWebServer [main] Tomcat initialized with port 8081 (http)
+2025-01-29 17:05:01,116 INFO o.a.j.l.DirectJDKLog [main] Initializing ProtocolHandler ["http-nio-8081"]
+2025-01-29 17:05:01,117 INFO o.a.j.l.DirectJDKLog [main] Starting service [Tomcat]
+2025-01-29 17:05:01,117 INFO o.a.j.l.DirectJDKLog [main] Starting Servlet engine: [Apache Tomcat/10.1.24]
+2025-01-29 17:05:01,139 INFO o.a.j.l.DirectJDKLog [main] Initializing Spring embedded WebApplicationContext
+2025-01-29 17:05:01,140 INFO o.s.b.w.s.c.ServletWebServerApplicationContext [main] Root WebApplicationContext: initialization completed in 542 ms
+2025-01-29 17:05:01,573 INFO o.s.b.a.e.w.EndpointLinksResolver [main] Exposing 15 endpoints beneath base path '/actuator'
+2025-01-29 17:05:01,591 INFO o.a.j.l.DirectJDKLog [main] Starting ProtocolHandler ["http-nio-8081"]
+2025-01-29 17:05:01,598 INFO o.s.b.w.e.t.TomcatWebServer [main] Tomcat started on port 8081 (http) with context path '/'
+2025-01-29 17:05:01,605 INFO o.s.b.StartupInfoLogger [main] Started OrderApplication in 1.26 seconds (process running for 1.504)
