@@ -50,7 +50,7 @@ services:
       - kafka0
     command: "bash -c 'echo Waiting for Kafka to be ready... && \
                 cub kafka-ready -b kafka0:29092 1 30 && \
-                kafka-topics --create --topic order-payment-topic --partitions 3 --replication-factor 1 --if-not-exists --bootstrap-server kafka0:29092 && \
+                kafka-topics --create --topic order-events --partitions 3 --replication-factor 1 --if-not-exists --bootstrap-server kafka0:29092 && \
                 kafka-topics --create --topic order-notification-topic --partitions 2 --replication-factor 1 --if-not-exists --bootstrap-server kafka0:29092 && \
                 kafka-topics --create --topic test3 --partitions 2 --replication-factor 1 --if-not-exists --bootstrap-server kafka0:29092 
                 '"
