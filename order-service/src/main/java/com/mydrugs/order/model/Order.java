@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.List;
 
 @Entity
 @Table(name = "orders")
@@ -33,6 +34,10 @@ public class Order {
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> items;  // List of products in the order
+
 
     public enum OrderStatus {
         PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED
