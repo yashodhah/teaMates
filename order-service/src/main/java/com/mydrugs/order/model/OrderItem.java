@@ -1,5 +1,6 @@
 package com.mydrugs.order.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,6 +19,7 @@ public class OrderItem {
 
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)
+    @JsonBackReference  // This tells Jackson to IGNORE `order` when serializing OrderItem
     private Order order;  // Reference to the order
 
     @ManyToOne

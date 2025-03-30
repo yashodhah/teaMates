@@ -1,4 +1,4 @@
-FROM maven:3.8.8-eclipse-temurin-21 AS order-service-build
+FROM maven:3.8.8-eclipse-temurin-21 AS order-processing-service-build
 
 # set working directory
 WORKDIR /build
@@ -11,7 +11,7 @@ COPY ./src ./src
 # run maven build
 RUN mvn package spring-boot:repackage -DskipTests
 
-FROM eclipse-temurin:17-jre-alpine AS order-service
+FROM eclipse-temurin:17-jre-alpine AS order-processing-service
 
 # Set application port
 ENV APP_PORT=80
@@ -19,7 +19,7 @@ EXPOSE ${APP_PORT}
 WORKDIR /app
 
 # copy artifacts from build stage into the container image
-COPY --from=order-service-build /build/target/order-service.jar /app/
+COPY --from=order-processing-service-build /build/target/order-service.jar /app/
 
 # install bash because alpine uses /bin/sh
 RUN apk update \

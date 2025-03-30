@@ -66,4 +66,22 @@
         </plugins>
     </build>
 
+    <profiles>
+        <!-- AWS Profile -->
+        <profile>
+            <id>aws</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+                <!-- AWS SDK for SQS -->
+                <dependency>
+                    <groupId>software.amazon.awssdk</groupId>
+                    <artifactId>sqs</artifactId>
+                    <version>${aws.java.sdk.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
+
 </project>

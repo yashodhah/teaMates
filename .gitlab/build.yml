@@ -1,0 +1,45 @@
+.service-images-build:
+  extends:
+    - .variables
+  services:
+    - name: ${IMAGE_DOCKER_DIND}
+      alias: docker
+  stage: build
+  image: ${IMAGE_PIPELINE}
+
+  variables:
+
+
+    # Optional parameters
+    # USE_LOG_LEVEL_ARG: 'true'
+    BUILD_ARGS_EXTRA: ''
+
+    # Name of the service. To be filled by child job.
+    SERVICE_NAME: ''
+
+    # Child-job override of default conventions.
+    DOCKER_REPOSITORY_NAME: ''  # Derived from SERVICE_NAME, Note: The script will still add `shared-[eu|us]/services` depending on Account ID, even if you override repository name.
+    DOCKER_TARGET: ''           # SERVICE_NAME
+    DOCKERFILE_PATH: ''         # Derived from SERVICE_NAME
+
+    # Space-separated, if build requires ECR/Docker Login to other AWS Accounts.
+    ECR_ACCOUNT_IDS_EXTRA: ''
+
+    # Regions
+    AWS_EU_REGION:        'eu-west-1' # main EU region where images will be pushed
+    AWS_EU_REGION_BACKUP: 'eu-west-2' # backup EU region where images will be pushed
+    AWS_US_REGION:        'us-east-1' # main US region where images will be pushed
+    AWS_US_REGION_BACKUP: 'us-east-2' # backup US region where images will be pushed
+
+    # Docker push destinations (space separated, allowed: eu eu_backup us us_backup)
+    PUSH_TO: 'eu'
+
+  script:
+    - bash .cicd_scripts/build/service/build_service.sh
+  timeout: 2h   # INFRA-580: ECR Scan can take really long at times...
+  dependencies:
+    - copy-cicd-scripts
+  artifacts:
+    when: always
+    paths:
+      - ".images/"

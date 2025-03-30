@@ -1,0 +1,4 @@
+mydrugs:
+  messaging:
+    sqs:
+      queueURL: ${SQS_QUEUE_URL}

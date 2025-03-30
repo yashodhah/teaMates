@@ -14,13 +14,13 @@ import java.util.Optional;
 
 @Service
 @Slf4j
-public class OrderProcessingListener {
+public class OrderProcessingKafkaListener {
 
     private final OrderRepository orderRepository;
     private final ObjectMapper objectMapper;
     private final OrderProcessingService orderProcessingService;
 
-    public OrderProcessingListener(OrderRepository orderRepository, ObjectMapper objectMapper, OrderProcessingService orderProcessingService) {
+    public OrderProcessingKafkaListener(OrderRepository orderRepository, ObjectMapper objectMapper, OrderProcessingService orderProcessingService) {
         this.orderRepository = orderRepository;
         this.objectMapper = objectMapper;
         this.orderProcessingService = orderProcessingService;
@@ -36,13 +36,11 @@ public class OrderProcessingListener {
             Optional<Order> existingOrder = orderRepository.findByOrderNumber(order.getOrderNumber());
             if (existingOrder.isEmpty()) {
                 order.setStatus(Order.OrderStatus.PENDING);
-                orderRepository.save(order);
             } else {
                 order = existingOrder.get();
             }
 
             orderProcessingService.processOrder(order);
-
             ack.acknowledge();
 
         } catch (Exception e) {

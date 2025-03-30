@@ -1,16 +1,9 @@
+server:
+  port: 8081
+
 spring:
   application:
     name: order-service
-  kafka:
-    bootstrap-servers: localhost:9092
-    producer:
-      retries: 3
-      delivery-timeout: 5000ms # Fail after 5 seconds if Kafka is unreachable
-      properties:
-        request.timeout.ms: 3000  # Timeout a single request in 3s
-        retry.backoff.ms: 1000    # Wait 1s before each retry
-    template:
-      observation-enabled: true
   datasource:
     url: jdbc:h2:mem:ordersdb
     driver-class-name: org.h2.Driver
@@ -18,16 +11,16 @@ spring:
     password:
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none # Ensures tables are created before inserting data
     show-sql: true
     database-platform: org.hibernate.dialect.H2Dialect
+  sql:
+    init:
+      mode: always  # Forces execution of data.sql on every restart
   h2:
     console:
       enabled: true
       path: /h2-console
-
-server:
-  port: 8081
 
 management:
   endpoints:

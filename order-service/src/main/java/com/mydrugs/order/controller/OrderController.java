@@ -18,8 +18,8 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<Order> createOrder(@RequestBody Order order) {
-        return ResponseEntity.ok(orderService.createOrder(order));
+    public ResponseEntity<Order> createOrder(@RequestBody OrderRequest orderRequest) {
+        return ResponseEntity.ok(orderService.createOrder(orderRequest));
     }
 
     @GetMapping("/{orderNumber}")

@@ -1,5 +1,7 @@
 package com.mydrugs.order.messaging;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mydrugs.order.model.Order;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
@@ -7,12 +9,9 @@ import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+@Profile("aws")
 @Slf4j
 @Service
-@Profile("aws")
 public class SqsOrderEventPublisher implements OrderEventPublisher {
 
     private final SqsClient sqsClient;

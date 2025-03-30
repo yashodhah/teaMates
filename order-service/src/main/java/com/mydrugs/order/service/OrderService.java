@@ -1,41 +1,65 @@
 package com.mydrugs.order.service;
 
+import com.mydrugs.order.controller.OrderRequest;
 import com.mydrugs.order.messaging.OrderEventPublisher;
 import com.mydrugs.order.model.Order;
+import com.mydrugs.order.model.OrderItem;
+import com.mydrugs.order.model.Product;
 import com.mydrugs.order.repository.OrderRepository;
+import com.mydrugs.order.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final ProductRepository productRepository;
     private final OrderEventPublisher orderEventPublisher;
 
-    public OrderService(OrderRepository orderRepository, OrderEventPublisher orderEventPublisher) {
+    public OrderService(OrderRepository orderRepository,
+                        ProductRepository productRepository,
+                        OrderEventPublisher orderEventPublisher) {
         this.orderRepository = orderRepository;
+        this.productRepository = productRepository;
         this.orderEventPublisher = orderEventPublisher;
     }
 
     @Transactional
-    public Order createOrder(Order order) {
-        if (order.getTotalAmount() == null || order.getTotalAmount() <= 0) {
-            throw new IllegalArgumentException("Order total amount must be positive.");
-        }
+    public Order createOrder(OrderRequest orderRequest) {
+        // Fetch products & validate stock
+        List<OrderItem> orderItems = orderRequest.items().stream()
+                .map(item -> {
+                    Product product = productRepository.findById(item.id())
+                            .orElseThrow(() -> new IllegalArgumentException("Product not found: " + item.id()));
 
-        if (order.getCustomerId() == null || order.getCustomerId().trim().isEmpty()) {
-            throw new IllegalArgumentException("Customer ID is required.");
-        }
+                    return OrderItem.builder()
+                            .product(product)
+                            .quantity(item.quantity())
+                            .build();
+                })
+                .collect(Collectors.toList());
 
-        order.setOrderNumber(UUID.randomUUID().toString());
-        order.setCreatedAt(Instant.now());
-        order.setStatus(Order.OrderStatus.PENDING);
+        // Create order entity
+        Order order = Order.builder()
+                .orderNumber("ORD-" + System.currentTimeMillis()) // Meaningful order number
+                .customerId(orderRequest.customerId())
+                .totalAmount(orderRequest.totalAmount())
+                .status(Order.OrderStatus.PENDING)
+                .createdAt(Instant.now())
+                .items(orderItems)
+                .build();
 
+        // Set the parent order to each order item, circular reference here
+        orderItems.forEach(orderItem -> orderItem.setOrder(order));
+
+        // Save order & publish event
         Order savedOrder = orderRepository.save(order);
+        // TODO: Send only required, Don't send the whole order
         orderEventPublisher.publishOrderCreatedEvent(savedOrder);
 
         return savedOrder;
