@@ -1,6 +1,7 @@
 package com.mydrugs.orderprocessing.service;
 
 import com.mydrugs.orderprocessing.model.Order;
+import com.mydrugs.orderprocessing.model.OrderDTO;
 import com.mydrugs.orderprocessing.repository.OrderRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,10 +18,12 @@ public class OrderProcessingService {
     }
 
     @Transactional
-    public void processOrder(Order order) {
-        log.info("Processing order: {}", order.getOrderNumber());
+    public void processOrder(OrderDTO orderDTO) {
+        log.info("Processing order: {}", orderDTO.getOrderNumber());
 
+        Order order = Order.fromOrderDTO(orderDTO);
         order.setStatus(Order.OrderStatus.PROCESSING);
+
         orderRepository.save(order);
 
         try {

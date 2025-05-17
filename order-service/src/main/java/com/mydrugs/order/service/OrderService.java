@@ -1,7 +1,7 @@
 package com.mydrugs.order.service;
 
 import com.mydrugs.order.controller.OrderRequest;
-import com.mydrugs.order.messaging.OrderEventPublisher;
+import com.mydrugs.order.messaging.EventPublisher;
 import com.mydrugs.order.model.Order;
 import com.mydrugs.order.model.OrderItem;
 import com.mydrugs.order.model.Product;
@@ -19,11 +19,11 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
-    private final OrderEventPublisher orderEventPublisher;
+    private final EventPublisher orderEventPublisher;
 
     public OrderService(OrderRepository orderRepository,
                         ProductRepository productRepository,
-                        OrderEventPublisher orderEventPublisher) {
+                        EventPublisher orderEventPublisher) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.orderEventPublisher = orderEventPublisher;
@@ -60,7 +60,7 @@ public class OrderService {
         // Save order & publish event
         Order savedOrder = orderRepository.save(order);
         // TODO: Send only required, Don't send the whole order
-        orderEventPublisher.publishOrderCreatedEvent(savedOrder);
+        orderEventPublisher.publishEvent(savedOrder);
 
         return savedOrder;
     }

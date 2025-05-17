@@ -39,3 +39,8 @@ management:
 #  otlp:
 #    tracing:
 #      endpoint: http://localhost:4318/v1/traces
+
+#logging:
+#  level:
+#    software.amazon.awssdk.auth: DEBUG
+#    io.awspring.cloud: DEBUG

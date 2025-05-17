@@ -76,9 +76,8 @@
             <dependencies>
                 <!-- AWS SDK for SQS -->
                 <dependency>
-                    <groupId>software.amazon.awssdk</groupId>
-                    <artifactId>sqs</artifactId>
-                    <version>${aws.java.sdk.version}</version>
+                    <groupId>io.awspring.cloud</groupId>
+                    <artifactId>spring-cloud-aws-starter-sqs</artifactId>
                 </dependency>
             </dependencies>
         </profile>

@@ -2,37 +2,42 @@ package com.mydrugs.order.messaging;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mydrugs.order.config.SQSProperties;
 import com.mydrugs.order.model.Order;
+import io.awspring.cloud.sqs.operations.SendResult;
+import io.awspring.cloud.sqs.operations.SqsTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
+import java.util.Map;
+
 @Profile("aws")
 @Slf4j
 @Service
-public class SqsOrderEventPublisher implements OrderEventPublisher {
+public class SQSOrderEventPublisher implements EventPublisher<Order> {
 
-    private final SqsClient sqsClient;
     private final ObjectMapper objectMapper;
-    private final String queueUrl = "https://sqs.YOUR-REGION.amazonaws.com/YOUR-ACCOUNT-ID/order-queue";
+    private final SqsTemplate sqsTemplate;
 
-    public SqsOrderEventPublisher(SqsClient sqsClient, ObjectMapper objectMapper) {
-        this.sqsClient = sqsClient;
+    public SQSOrderEventPublisher(ObjectMapper objectMapper, SqsTemplate sqsTemplate) {
         this.objectMapper = objectMapper;
+        this.sqsTemplate = sqsTemplate;
     }
 
+
     @Override
-    public void publishOrderCreatedEvent(Order order) {
+    public void publishEvent(Order order) {
         try {
             String messageBody = objectMapper.writeValueAsString(order);
-            SendMessageRequest sendMsgRequest = SendMessageRequest.builder()
-                    .queueUrl(queueUrl)
-                    .messageBody(messageBody)
-                    .build();
+            SendResult<String> result = sqsTemplate.send(to -> to
+                    .payload(messageBody)
+                    .headers(Map.of("key", "value"))
+                    .delaySeconds(10)
+            );
 
-            sqsClient.sendMessage(sendMsgRequest);
             log.info("Published order {} to SQS", order.getOrderNumber());
         } catch (JsonProcessingException e) {
             log.error("Failed to serialize order for SQS", e);

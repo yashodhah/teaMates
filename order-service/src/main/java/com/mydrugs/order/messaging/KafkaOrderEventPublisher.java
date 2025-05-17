@@ -4,12 +4,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mydrugs.order.model.Order;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+@Profile("K8")
 @Service
 @Slf4j
-public class KafkaOrderEventPublisher implements OrderEventPublisher {
+public class KafkaOrderEventPublisher implements EventPublisher<Order> {
 
     private final KafkaTemplate<String, String> kafkaTemplate; // Send JSON as String
     private final ObjectMapper objectMapper; // JSON serializer
@@ -20,7 +22,7 @@ public class KafkaOrderEventPublisher implements OrderEventPublisher {
     }
 
     @Override
-    public void publishOrderCreatedEvent(Order order) {
+    public void publishEvent(Order order) {
         try {
             String jsonOrder = objectMapper.writeValueAsString(order); // Convert to JSON
             kafkaTemplate.send("order-events", jsonOrder);

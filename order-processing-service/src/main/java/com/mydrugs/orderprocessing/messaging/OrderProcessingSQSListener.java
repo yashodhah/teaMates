@@ -1,75 +1,41 @@
 package com.mydrugs.orderprocessing.messaging;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mydrugs.orderprocessing.config.AWSMessagingProperties;
-import com.mydrugs.orderprocessing.model.Order;
+import com.mydrugs.orderprocessing.model.OrderDTO;
 import com.mydrugs.orderprocessing.service.OrderProcessingService;
+import io.awspring.cloud.sqs.annotation.SqsListener;
+import io.awspring.cloud.sqs.listener.QueueAttributes;
+import io.awspring.cloud.sqs.listener.Visibility;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.services.sqs.SqsClient;
-import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
-import software.amazon.awssdk.services.sqs.model.Message;
-import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
-
-import java.util.List;
 
 @Profile("aws")
 @Service
 @Slf4j
 public class OrderProcessingSQSListener {
 
-    private final SqsClient sqsClient;
-    private final ObjectMapper objectMapper;
     private final OrderProcessingService orderProcessingService;
-    private final AWSMessagingProperties awsMessagingProperties;
+    private final ObjectMapper objectMapper;
 
-
-    public OrderProcessingSQSListener(SqsClient sqsClient,
-                                      ObjectMapper objectMapper,
-                                      OrderProcessingService orderProcessingService,
-                                      AWSMessagingProperties awsMessagingProperties) {
-        this.sqsClient = sqsClient;
-        this.objectMapper = objectMapper;
+    public OrderProcessingSQSListener(OrderProcessingService orderProcessingService, ObjectMapper objectMapper) {
         this.orderProcessingService = orderProcessingService;
-        this.awsMessagingProperties = awsMessagingProperties;
+        this.objectMapper = objectMapper;
     }
 
-    @Scheduled(fixedDelay = 5000)  // Poll every 5 seconds
-    public void listenForOrders() {
-        try {
-            ReceiveMessageRequest receiveMessageRequest = ReceiveMessageRequest.builder()
-                    .queueUrl(awsMessagingProperties.queueURL())
-                    .maxNumberOfMessages(5)
-                    .waitTimeSeconds(20) // Long polling reduces API calls
-                    .build();
-
-            List<Message> messages = sqsClient.receiveMessage(receiveMessageRequest).messages();
-
-            for (Message message : messages) {
-                processMessage(message);
-            }
-        } catch (Exception e) {
-            log.error("Error while polling SQS", e);
-        }
+    @SqsListener({"${mydrugs.messaging.sqs.queueName}"})
+    public void listen(String message, Visibility visibility, QueueAttributes queueAttributes, software.amazon.awssdk.services.sqs.model.Message originalMessage) {
+        processMessage(message);
+        log.info("Message processed and deleted from SQS");
     }
 
-    private void processMessage(Message message) {
+    private void processMessage(String message) {
         try {
-            Order order = objectMapper.readValue(message.body(), Order.class);
+            OrderDTO order = objectMapper.readValue(message, OrderDTO.class);
             log.info("Processing order {}", order.getOrderNumber());
 
             orderProcessingService.processOrder(order);
-
-            DeleteMessageRequest deleteMessageRequest = DeleteMessageRequest.builder()
-                    .queueUrl(awsMessagingProperties.queueURL())
-                    .receiptHandle(message.receiptHandle())
-                    .build();
-            sqsClient.deleteMessage(deleteMessageRequest);
-
             log.info("Deleted order {} from SQS", order.getOrderNumber());
-
         } catch (Exception e) {
             log.error("Failed to process order message", e);
         }

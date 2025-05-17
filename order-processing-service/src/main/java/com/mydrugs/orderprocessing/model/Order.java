@@ -14,6 +14,8 @@ import java.time.Instant;
 @Builder
 public class Order {
 
+
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -37,4 +39,15 @@ public class Order {
     public enum OrderStatus {
         PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED
     }
+
+public static Order fromOrderDTO(OrderDTO orderDTO) {
+    return Order.builder()
+            .id(orderDTO.getId())
+            .orderNumber(orderDTO.getOrderNumber())
+            .customerId(orderDTO.getCustomerId())
+            .totalAmount(orderDTO.getTotalAmount())
+            .status(OrderStatus.valueOf(orderDTO.getStatus()))
+            .createdAt(orderDTO.getCreatedAt())
+            .build();
+}
 }

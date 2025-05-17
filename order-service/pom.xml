@@ -72,11 +72,13 @@
                 <activeByDefault>false</activeByDefault>
             </activation>
             <dependencies>
-                <!-- AWS SDK for SQS -->
+                <dependency>
+                    <groupId>io.awspring.cloud</groupId>
+                    <artifactId>spring-cloud-aws-starter-sqs</artifactId>
+                </dependency>
                 <dependency>
                     <groupId>software.amazon.awssdk</groupId>
-                    <artifactId>sqs</artifactId>
-                    <version>${aws.java.sdk.version}</version>
+                    <artifactId>sso</artifactId>
                 </dependency>
             </dependencies>
         </profile>
