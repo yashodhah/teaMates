@@ -9,8 +9,6 @@ import io.awspring.cloud.sqs.operations.SqsTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.services.sqs.SqsClient;
-import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 import java.util.Map;
 
@@ -21,10 +19,14 @@ public class SQSOrderEventPublisher implements EventPublisher<Order> {
 
     private final ObjectMapper objectMapper;
     private final SqsTemplate sqsTemplate;
+    private final SQSProperties sqsProperties;
 
-    public SQSOrderEventPublisher(ObjectMapper objectMapper, SqsTemplate sqsTemplate) {
+    public SQSOrderEventPublisher(ObjectMapper objectMapper,
+                                  SqsTemplate sqsTemplate,
+                                   SQSProperties sqsProperties) {
         this.objectMapper = objectMapper;
         this.sqsTemplate = sqsTemplate;
+        this.sqsProperties = sqsProperties;
     }
 
 
@@ -34,6 +36,7 @@ public class SQSOrderEventPublisher implements EventPublisher<Order> {
             String messageBody = objectMapper.writeValueAsString(order);
             SendResult<String> result = sqsTemplate.send(to -> to
                     .payload(messageBody)
+                    .queue(sqsProperties.getQueueName())
                     .headers(Map.of("key", "value"))
                     .delaySeconds(10)
             );

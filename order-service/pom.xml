@@ -69,13 +69,13 @@
         <profile>
             <id>aws</id>
             <activation>
-                <activeByDefault>false</activeByDefault>
+                <activeByDefault>true</activeByDefault>
             </activation>
             <dependencies>
-                <dependency>
-                    <groupId>io.awspring.cloud</groupId>
-                    <artifactId>spring-cloud-aws-starter-sqs</artifactId>
-                </dependency>
+                    <dependency>
+                        <groupId>io.awspring.cloud</groupId>
+                        <artifactId>spring-cloud-aws-starter-sqs</artifactId>
+                    </dependency>
                 <dependency>
                     <groupId>software.amazon.awssdk</groupId>
                     <artifactId>sso</artifactId>

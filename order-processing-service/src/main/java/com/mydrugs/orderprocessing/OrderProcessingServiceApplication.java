@@ -1,11 +1,12 @@
-package com.mydrugs.order;
+package com.mydrugs.orderprocessing;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class OrderApplication {
+public class OrderProcessingServiceApplication {
     public static void main(String[] args) {
-        SpringApplication.run(OrderApplication.class, args);
+        SpringApplication.run(OrderProcessingServiceApplication.class, args);
     }
 }
+

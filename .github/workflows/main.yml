@@ -1,0 +1,43 @@
+name: AWS Labs Automation
+
+on:
+  workflow_dispatch:
+    inputs:
+      lab:
+        description: 'Select lab to run'
+        required: true
+        type: choice
+        options:
+          - networking_immersion_day
+          - secure_hybrid_access_s3
+          - vpc_layered_security
+      action:
+        description: 'Deploy or Destroy?'
+        required: true
+        type: choice
+        options:
+          - deploy
+          - destroy
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  manage-stack:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::376907302485:role/AWS_LABS_OIDC_DEPLOYER
+          aws-region: us-east-1
+
+      - name: Run ${{ github.event.inputs.action }} script
+        run: |
+          chmod +x .github/scripts/${{ github.event.inputs.action }}.sh
+          .github/scripts/${{ github.event.inputs.action }}.sh ${{ github.event.inputs.lab }}

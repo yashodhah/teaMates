@@ -71,7 +71,7 @@
         <profile>
             <id>aws</id>
             <activation>
-                <activeByDefault>false</activeByDefault>
+                <activeByDefault>true</activeByDefault>
             </activation>
             <dependencies>
                 <!-- AWS SDK for SQS -->

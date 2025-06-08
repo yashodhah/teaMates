@@ -3,7 +3,6 @@ mydrugs:
     sqs:
       queueName: ${SQS_QUEUE_NAME}
 
-
 spring:
   cloud:
     aws:

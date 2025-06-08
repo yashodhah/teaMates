@@ -1,7 +1,7 @@
 mydrugs:
   messaging:
     sqs:
-      queueName: ${SQS_QUEUE_NAME}
+      queueName: ${SQS_QUEUE_NAME:}
 
 spring:
   cloud:

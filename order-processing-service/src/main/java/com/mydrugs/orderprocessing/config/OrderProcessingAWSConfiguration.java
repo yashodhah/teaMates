@@ -2,14 +2,9 @@ package com.mydrugs.orderprocessing.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.awspring.cloud.sqs.config.SqsListenerConfigurer;
-import io.awspring.cloud.sqs.operations.SqsTemplate;
-import io.awspring.cloud.sqs.operations.TemplateAcknowledgementMode;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 
 @Profile("aws")
 @Configuration
