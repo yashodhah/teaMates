@@ -1,8 +1,9 @@
+# .github/workflows/main.yml
 name: TeaMates CI/CD
 
 on:
   push:
-    branches: ['**']   # every branch
+    branches: ['**']   # trigger on every branch
 
 permissions:
   id-token: write
@@ -12,10 +13,10 @@ env:
   AWS_REGION: ap-southeast-1
   ECR_REGISTRY: 376907302485.dkr.ecr.ap-southeast-1.amazonaws.com
 
+# -------------------------------------------------------------------
+# Stage 1: compile & upload each service’s JAR
+# -------------------------------------------------------------------
 jobs:
-  # -------------------------------------------------------------------
-  # Stage 1: compile & upload each service’s JAR
-  # -------------------------------------------------------------------
   build:
     runs-on: ubuntu-latest
     strategy:
@@ -72,7 +73,7 @@ jobs:
             -t $IMAGE_NAME \
             .
 
-          # save to tar so next job can push it
+          # save the built image as a tar for the push step
           docker save $IMAGE_NAME -o image-${{ matrix.service }}.tar
 
       - name: 📦 Upload Docker image tar
