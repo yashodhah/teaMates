@@ -2,7 +2,7 @@ name: TeaMates CI/CD
 
 on:
   push:
-    branches: ['**']
+    branches: ['**']   # every branch
 
 permissions:
   id-token: write
@@ -12,47 +12,41 @@ env:
   AWS_REGION: ap-southeast-1
   ECR_REGISTRY: 376907302485.dkr.ecr.ap-southeast-1.amazonaws.com
 
-# Define matrix once
 jobs:
-  define:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-      - id: set-matrix
-        run: |
-          echo "matrix={\"service\":[\"order-service\",\"order-processing-service\",\"notification-service\"]}" >> $GITHUB_OUTPUT
-
-  # Stage 1: Build jars per service
+  # -------------------------------------------------------------------
+  # Stage 1: compile & upload each service’s JAR
+  # -------------------------------------------------------------------
   build:
-    needs: define
     runs-on: ubuntu-latest
     strategy:
-      matrix: ${{fromJson(needs.define.outputs.matrix)}}
+      matrix:
+        service: [order-service, order-processing-service, notification-service]
 
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: ☕ Set up JDK 21
+      - name: ☕ Set up Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
 
       - name: 🔨 Build ${{ matrix.service }}
-        run: ./mvnw -B clean package -pl ${{ matrix.service }} -am -DskipTests
+        run: |
+          ./mvnw -B clean package \
+            -pl ${{ matrix.service }} -am \
+            -DskipTests
 
-      - name: 📦 Upload ${{ matrix.service }} jar
+      - name: 📦 Upload ${{ matrix.service }} JAR
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.service }}-jar
-          path: |
-            ${{ matrix.service }}/target/*.jar
-            !**/*-sources.jar
-            !**/*-javadoc.jar
+          path: ${{ matrix.service }}/target/*.jar
 
-  # Stage 2: Docker build
+  # -------------------------------------------------------------------
+  # Stage 2: build Docker image & save as tar
+  # -------------------------------------------------------------------
   docker-build:
     needs: build
     runs-on: ubuntu-latest
@@ -61,21 +55,35 @@ jobs:
         service: [order-service, order-processing-service, notification-service]
 
     steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: ⬇️ Download ${{ matrix.service }} artifact
+      - name: 📥 Download ${{ matrix.service }} JAR
         uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.service }}-jar
+          path: artifacts/${{ matrix.service }}
 
       - name: 🐳 Build Docker image for ${{ matrix.service }}
         run: |
-          docker build -f .docker/Dockerfile \
-            --build-arg SERVICE_NAME=${{ matrix.service }} \
-            -t $ECR_REGISTRY/${{ matrix.service }}:${GITHUB_SHA} .
+          JAR_PATH=$(ls artifacts/${{ matrix.service }}/*.jar)
+          IMAGE_NAME=$ECR_REGISTRY/${{ matrix.service }}:${GITHUB_SHA}
 
-  # Stage 3: Push Docker image
+          docker build \
+            -f .docker/Dockerfile \
+            --build-arg JAR_FILE=$JAR_PATH \
+            -t $IMAGE_NAME \
+            .
+
+          # save to tar so next job can push it
+          docker save $IMAGE_NAME -o image-${{ matrix.service }}.tar
+
+      - name: 📦 Upload Docker image tar
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-${{ matrix.service }}-tar
+          path: image-${{ matrix.service }}.tar
+
+  # -------------------------------------------------------------------
+  # Stage 3: download tar, load & push to ECR
+  # -------------------------------------------------------------------
   docker-push:
     needs: docker-build
     runs-on: ubuntu-latest
@@ -84,8 +92,11 @@ jobs:
         service: [order-service, order-processing-service, notification-service]
 
     steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
+      - name: 📥 Download image tar for ${{ matrix.service }}
+        uses: actions/download-artifact@v4
+        with:
+          name: image-${{ matrix.service }}-tar
+          path: .
 
       - name: 🔐 Configure AWS credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v2
@@ -96,6 +107,8 @@ jobs:
       - name: 🔐 Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: 🚀 Push Docker image for ${{ matrix.service }}
+      - name: 🚀 Load & push ${{ matrix.service }} to ECR
         run: |
-          docker push $ECR_REGISTRY/${{ matrix.service }}:${GITHUB_SHA}
+          IMAGE_NAME=$ECR_REGISTRY/${{ matrix.service }}:${GITHUB_SHA}
+          docker load -i image-${{ matrix.service }}.tar
+          docker push $IMAGE_NAME

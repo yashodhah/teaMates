@@ -1,10 +1,7 @@
+# .docker/Dockerfile
 FROM eclipse-temurin:21
 
-ARG SERVICE_NAME
-ENV SERVICE_NAME=${SERVICE_NAME}
-
+ARG JAR_FILE
 WORKDIR /app
-
-COPY ${SERVICE_NAME}/target/*.jar /app/app.jar
-
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+COPY ${JAR_FILE} ./app.jar
+ENTRYPOINT ["java","-jar","/app/app.jar"]
