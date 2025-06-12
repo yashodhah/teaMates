@@ -68,7 +68,7 @@ jobs:
           IMAGE_NAME=$ECR_REGISTRY/${{ matrix.service }}:${GITHUB_SHA}
 
           docker build \
-            -f .docker/Dockerfile \
+            -f ./.docker/Dockerfile \  \
             --build-arg JAR_FILE=$JAR_PATH \
             -t $IMAGE_NAME \
             .
