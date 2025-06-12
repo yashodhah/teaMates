@@ -69,9 +69,6 @@ jobs:
         with:
           name: ${{ matrix.service }}-jar
 
-      - name: 🔐 Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
-
       - name: 🐳 Build Docker image for ${{ matrix.service }}
         run: |
           docker build -f .docker/Dockerfile \
