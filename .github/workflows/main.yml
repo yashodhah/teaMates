@@ -68,13 +68,12 @@ jobs:
           IMAGE_NAME=$ECR_REGISTRY/${{ matrix.service }}:${GITHUB_SHA}
 
           docker build \
-            -f ./.docker/Dockerfile \  \
+            -f ./.docker/Dockerfile \ 
             --build-arg JAR_FILE=$JAR_PATH \
             -t $IMAGE_NAME \
             .
-
-          # save the built image as a tar for the push step
           docker save $IMAGE_NAME -o image-${{ matrix.service }}.tar
+  
 
       - name: 📦 Upload Docker image tar
         uses: actions/upload-artifact@v4
