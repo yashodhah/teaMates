@@ -2,7 +2,7 @@ name: TeaMates CI/CD
 
 on:
   push:
-    branches: ['**']  # Trigger on all branches
+    branches: ['**']
 
 permissions:
   id-token: write
@@ -12,12 +12,23 @@ env:
   AWS_REGION: ap-southeast-1
   ECR_REGISTRY: 376907302485.dkr.ecr.ap-southeast-1.amazonaws.com
 
+# Define matrix once
 jobs:
-  build-and-push:
+  define:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-matrix
+        run: |
+          echo "matrix={\"service\":[\"order-service\",\"order-processing-service\",\"notification-service\"]}" >> $GITHUB_OUTPUT
+
+  # Stage 1: Build jars per service
+  build:
+    needs: define
     runs-on: ubuntu-latest
     strategy:
-      matrix:
-        service: [order-service, order-processing-service, notification-service]
+      matrix: ${{fromJson(needs.define.outputs.matrix)}}
 
     steps:
       - name: 📥 Checkout code
@@ -29,21 +40,11 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: 🔧 Build ${{ matrix.service }}
-        run: ./mvnw -B clean package -DskipTests
+      - name: 🔨 Build ${{ matrix.service }}
+        run: ./mvnw -B clean package -pl ${{ matrix.service }} -am -DskipTests
 
-      - name: 🔐 Configure AWS credentials using OIDC
-        uses: aws-actions/configure-aws-credentials@v2
+      - name: 📦 Upload ${{ matrix.service }} jar
+        uses: actions/upload-artifact@v4
         with:
-          role-to-assume: arn:aws:iam::376907302485:role/AWS_LABS_OIDC_DEPLOYER
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: 🔐 Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: 🐳 Build and push ${{ matrix.service }} Docker image
-        run: |
-          docker build -f .docker/Dockerfile \
-            --build-arg SERVICE_NAME=${{ matrix.service }} \
-            -t $ECR_REGISTRY/${{ matrix.service }}:${GITHUB_SHA} .
-          docker push $ECR_REGISTRY/${{ matrix.service }}:${GITHUB_SHA}
+          name: ${{ matrix.service }}-jar
+          path
