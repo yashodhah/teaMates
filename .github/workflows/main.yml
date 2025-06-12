@@ -2,7 +2,7 @@ name: TeaMates CI/CD
 
 on:
   push:
-    branches: [ "**" ]
+    branches: ['**']  # Trigger on all branches
 
 permissions:
   id-token: write
@@ -10,39 +10,40 @@ permissions:
 
 env:
   AWS_REGION: ap-southeast-1
-  ECR_REGISTRY: 376907302485.dkr.ecr.ap-southeast-1.amazonaws.com/teamates
+  ECR_REGISTRY: 376907302485.dkr.ecr.ap-southeast-1.amazonaws.com
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [order-service, order-processing-service, notification-service]
 
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      - name: ☕ Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
 
-      - name: Build all services
+      - name: 🔧 Build ${{ matrix.service }}
         run: ./mvnw -B clean package -DskipTests
 
-      - name: Configure AWS credentials using OIDC
+      - name: 🔐 Configure AWS credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: arn:aws:iam::376907302485:role/AWS_LABS_OIDC_DEPLOYER
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Login to Amazon ECR
+      - name: 🔐 Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and push Docker images
+      - name: 🐳 Build and push ${{ matrix.service }} Docker image
         run: |
-          for SERVICE in order-service order-processing-service notification-service; do
-            docker build -f .docker/Dockerfile \
-              --build-arg SERVICE_NAME=$SERVICE \
-              -t $ECR_REGISTRY/$SERVICE:${GITHUB_SHA} .
-            docker push $ECR_REGISTRY/$SERVICE:${GITHUB_SHA}
-          done
+          docker build -f .docker/Dockerfile \
+            --build-arg SERVICE_NAME=${{ matrix.service }} \
+            -t $ECR_REGISTRY/${{ matrix.service }}:${GITHUB_SHA} .
+          docker push $ECR_REGISTRY/${{ matrix.service }}:${GITHUB_SHA}
