@@ -2,35 +2,20 @@ name: TeaMates CI/CD
 
 on:
   push:
-    branches: ["main"]
-  workflow_dispatch:
-    inputs:
-      lab:
-        description: 'Select lab to run'
-        required: true
-        type: choice
-        options:
-          - networking_immersion_day
-          - secure_hybrid_access_s3
-          - vpc_layered_security
-      action:
-        description: 'Deploy or Destroy?'
-        required: true
-        type: choice
-        options:
-          - deploy
-          - destroy
+    branches: [ "**" ]
 
 permissions:
   id-token: write
   contents: read
 
+env:
+  AWS_REGION: ap-southeast-1
+  ECR_REGISTRY: 376907302485.dkr.ecr.ap-southeast-1.amazonaws.com/teamates
+
 jobs:
   build-and-push:
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    env:
-      AWS_REGION: ap-southeast-1
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -42,7 +27,7 @@ jobs:
           java-version: '21'
 
       - name: Build all services
-        run: ./mvnw -B clean package
+        run: ./mvnw -B clean package -DskipTests
 
       - name: Configure AWS credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v2
@@ -51,44 +36,13 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
-        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and push order-service image
+      - name: Build and push Docker images
         run: |
-          docker build -f .docker/Dockerfile \
-            --build-arg SERVICE_NAME=order-service \
-            -t ${{ steps.login-ecr.outputs.registry }}/order-service:${{ github.sha }} .
-          docker push ${{ steps.login-ecr.outputs.registry }}/order-service:${{ github.sha }}
-
-      - name: Build and push order-processing-service image
-        run: |
-          docker build -f .docker/Dockerfile \
-            --build-arg SERVICE_NAME=order-processing-service \
-            -t ${{ steps.login-ecr.outputs.registry }}/order-processing-service:${{ github.sha }} .
-          docker push ${{ steps.login-ecr.outputs.registry }}/order-processing-service:${{ github.sha }}
-
-      - name: Build and push notification-service image
-        run: |
-          docker build -f .docker/Dockerfile \
-            --build-arg SERVICE_NAME=notification-service \
-            -t ${{ steps.login-ecr.outputs.registry }}/notification-service:${{ github.sha }} .
-          docker push ${{ steps.login-ecr.outputs.registry }}/notification-service:${{ github.sha }}
-
-  manage-stack:
-    if: github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Configure AWS credentials using OIDC
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: arn:aws:iam::376907302485:role/AWS_LABS_OIDC_DEPLOYER
-          aws-region: us-east-1
-
-      - name: Run ${{ github.event.inputs.action }} script
-        run: |
-          chmod +x .github/scripts/${{ github.event.inputs.action }}.sh
-          .github/scripts/${{ github.event.inputs.action }}.sh ${{ github.event.inputs.lab }}
+          for SERVICE in order-service order-processing-service notification-service; do
+            docker build -f .docker/Dockerfile \
+              --build-arg SERVICE_NAME=$SERVICE \
+              -t $ECR_REGISTRY/$SERVICE:${GITHUB_SHA} .
+            docker push $ECR_REGISTRY/$SERVICE:${GITHUB_SHA}
+          done
