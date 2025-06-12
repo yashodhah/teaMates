@@ -1,6 +1,8 @@
-name: AWS Labs Automation
+name: TeaMates CI/CD
 
 on:
+  push:
+    branches: ["main"]
   workflow_dispatch:
     inputs:
       lab:
@@ -24,9 +26,58 @@ permissions:
   contents: read
 
 jobs:
-  manage-stack:
+  build-and-push:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ap-southeast-1
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Build all services
+        run: ./mvnw -B clean package
+
+      - name: Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::376907302485:role/AWS_LABS_OIDC_DEPLOYER
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push order-service image
+        run: |
+          docker build -f .docker/Dockerfile \
+            --build-arg SERVICE_NAME=order-service \
+            -t ${{ steps.login-ecr.outputs.registry }}/order-service:${{ github.sha }} .
+          docker push ${{ steps.login-ecr.outputs.registry }}/order-service:${{ github.sha }}
+
+      - name: Build and push order-processing-service image
+        run: |
+          docker build -f .docker/Dockerfile \
+            --build-arg SERVICE_NAME=order-processing-service \
+            -t ${{ steps.login-ecr.outputs.registry }}/order-processing-service:${{ github.sha }} .
+          docker push ${{ steps.login-ecr.outputs.registry }}/order-processing-service:${{ github.sha }}
+
+      - name: Build and push notification-service image
+        run: |
+          docker build -f .docker/Dockerfile \
+            --build-arg SERVICE_NAME=notification-service \
+            -t ${{ steps.login-ecr.outputs.registry }}/notification-service:${{ github.sha }} .
+          docker push ${{ steps.login-ecr.outputs.registry }}/notification-service:${{ github.sha }}
+
+  manage-stack:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
