@@ -47,4 +47,58 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.service }}-jar
-          path
+          path: |
+            ${{ matrix.service }}/target/*.jar
+            !**/*-sources.jar
+            !**/*-javadoc.jar
+
+  # Stage 2: Docker build
+  docker-build:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [order-service, order-processing-service, notification-service]
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ⬇️ Download ${{ matrix.service }} artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.service }}-jar
+
+      - name: 🔐 Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: 🐳 Build Docker image for ${{ matrix.service }}
+        run: |
+          docker build -f .docker/Dockerfile \
+            --build-arg SERVICE_NAME=${{ matrix.service }} \
+            -t $ECR_REGISTRY/${{ matrix.service }}:${GITHUB_SHA} .
+
+  # Stage 3: Push Docker image
+  docker-push:
+    needs: docker-build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [order-service, order-processing-service, notification-service]
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔐 Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::376907302485:role/AWS_LABS_OIDC_DEPLOYER
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 🔐 Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: 🚀 Push Docker image for ${{ matrix.service }}
+        run: |
+          docker push $ECR_REGISTRY/${{ matrix.service }}:${GITHUB_SHA}
