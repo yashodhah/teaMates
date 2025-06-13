@@ -8,10 +8,6 @@ on:
         description: 'JSON array of service names'
         required: true
         type: string
-      ecr_registry:
-        description: 'ECR registry URI (e.g. 123456789012.dkr.ecr.ap-southeast-1.amazonaws.com)'
-        required: true
-        type: string
     secrets:
       OIDC_ROLE:
         description: 'ARN of the OIDC role to assume'
