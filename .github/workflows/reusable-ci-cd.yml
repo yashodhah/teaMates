@@ -5,16 +5,17 @@ on:
   workflow_call:
     inputs:
       services:
-        description: 'JSON array of service names'
-        required: true
         type: string
+        required: true
       ecr_registry:
-        description: 'ECR registry URI'
-        required: true
         type: string
+        required: true
+      aws_region:
+        description: 'AWS Region (e.g. ap-southeast-1)'
+        type: string
+        required: true
     secrets:
       OIDC_ROLE:
-        description: 'ARN of the OIDC role to assume'
         required: true
 
 jobs:
@@ -95,7 +96,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.OIDC_ROLE }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ inputs.aws_region }}
 
       - name: Log in to ECR
         uses: aws-actions/amazon-ecr-login@v2

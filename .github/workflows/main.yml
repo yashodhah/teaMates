@@ -9,8 +9,6 @@ permissions:
   id-token: write
   contents: read
 
-env:
-  AWS_REGION: ap-southeast-1
 
 jobs:
   ci:
@@ -19,5 +17,6 @@ jobs:
       services: |
         ["order-service","order-processing-service","notification-service"]
       ecr_registry: 376907302485.dkr.ecr.ap-southeast-1.amazonaws.com
+      aws_region: ap-southeast-1
     secrets:
       OIDC_ROLE: arn:aws:iam::376907302485:role/AWS_LABS_OIDC_DEPLOYER
