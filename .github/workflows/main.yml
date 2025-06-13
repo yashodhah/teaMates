@@ -3,7 +3,7 @@ name: TeaMates CI/CD
 
 on:
   push:
-    branches: ['**']   # every branch
+    branches: ['**']
 
 permissions:
   id-token: write
@@ -11,13 +11,15 @@ permissions:
 
 env:
   AWS_REGION: ap-southeast-1
+  # this env is now ONLY for your driver workflow, and will be forwarded:
   ECR_REGISTRY: 376907302485.dkr.ecr.ap-southeast-1.amazonaws.com
 
 jobs:
   ci:
-    uses: ./.github/workflows/teaMates.yml
+    uses: ./.github/workflows/reusable-ci-cd.yml
     with:
       services: |
         ["order-service","order-processing-service","notification-service"]
+      ecr_registry: ${{ env.ECR_REGISTRY }}
     secrets:
       OIDC_ROLE: arn:aws:iam::376907302485:role/AWS_LABS_OIDC_DEPLOYER
