@@ -103,6 +103,6 @@ jobs:
 
       - name: Load & push ${{ matrix.service }} image
         run: |
-          IMAGE=${{ inputs.ECR_REGISTRY }}/teamates/${{ matrix.service }}:${{ github.sha }}
+          IMAGE=${{ inputs.ECR_REGISTRY }}/${{ matrix.service }}:${{ github.sha }}
           docker load -i image-${{ matrix.service }}.tar
           docker push $IMAGE

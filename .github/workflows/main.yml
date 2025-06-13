@@ -16,7 +16,7 @@ jobs:
     with:
       services: |
         ["order-service","order-processing-service","notification-service"]
-      ecr_registry: 376907302485.dkr.ecr.ap-southeast-1.amazonaws.com
+      ecr_registry: 376907302485.dkr.ecr.ap-southeast-1.amazonaws.com/teamates
       aws_region: ap-southeast-1
     secrets:
       OIDC_ROLE: arn:aws:iam::376907302485:role/AWS_LABS_OIDC_DEPLOYER
