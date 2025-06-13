@@ -34,29 +34,37 @@ jobs:
           java-version: '21'
 
       - name: 🔨 Compile ${{ matrix.service }}
-        run: ./mvnw -B clean package -pl ${{ matrix.service }} -am -DskipTests
+        run: ./mvnw -B clean compile -pl ${{ matrix.service }} -am -DskipTests
 
-  docker-build-push:
-    name: Build & Push Docker Images
-    needs: compile
+  build-and-push:
+    name: Build JAR & Push Docker
     runs-on: ubuntu-latest
     strategy:
       matrix:
         service: ${{ fromJson(inputs.services) }}
     steps:
-      - name: 📥 Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 🔐 Configure AWS credentials
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Compile ${{ matrix.service }}
+        run: ./mvnw -B clean package -pl ${{ matrix.service }} -am -DskipTests
+
+      - name: AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.OIDC_ROLE }}
           aws-region: ${{ inputs.aws_region }}
 
-      - name: 🔐 Login to Amazon ECR
+      - name: ECR login
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: 🐳 Build & Push ${{ matrix.service }} Docker image
+      - name: Build & push Docker image
         run: |
           IMAGE=${{ inputs.ecr_registry }}/${{ matrix.service }}:${{ github.sha }}
           docker build \
