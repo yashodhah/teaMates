@@ -11,8 +11,6 @@ permissions:
 
 env:
   AWS_REGION: ap-southeast-1
-  # this env is now ONLY for your driver workflow, and will be forwarded:
-  ECR_REGISTRY: 376907302485.dkr.ecr.ap-southeast-1.amazonaws.com
 
 jobs:
   ci:
@@ -20,6 +18,6 @@ jobs:
     with:
       services: |
         ["order-service","order-processing-service","notification-service"]
-      ecr_registry: ${{ env.ECR_REGISTRY }}
+      ecr_registry: 376907302485.dkr.ecr.ap-southeast-1.amazonaws.com
     secrets:
       OIDC_ROLE: arn:aws:iam::376907302485:role/AWS_LABS_OIDC_DEPLOYER
