@@ -14,34 +14,32 @@ env:
   ECR_REGISTRY: 376907302485.dkr.ecr.ap-southeast-1.amazonaws.com
 
 jobs:
-  set-matrix:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-      - id: set-matrix
-        run: |
-          echo "matrix={\"service\":[\"order-service\",\"order-processing-service\",\"notification-service\"]}" >> $GITHUB_OUTPUT
-
   build:
-    needs: set-matrix
     runs-on: ubuntu-latest
     strategy:
-      matrix: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
+      matrix:
+        service: &service_list
+          - order-service
+          - order-processing-service
+          - notification-service
+
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Java 21
+      - name: ☕ Set up Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
 
-      - name: Build ${{ matrix.service }}
-        run: ./mvnw -B clean package -pl ${{ matrix.service }} -am -DskipTests
+      - name: 🔨 Build ${{ matrix.service }}
+        run: |
+          ./mvnw -B clean package \
+            -pl ${{ matrix.service }} -am \
+            -DskipTests
 
-      - name: Upload ${{ matrix.service }} JAR
+      - name: 📦 Upload ${{ matrix.service }} JAR
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.service }}-jar
@@ -51,29 +49,33 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     strategy:
-      matrix: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
+      matrix:
+        service: *service_list
+
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: Download ${{ matrix.service }} JAR
+      - name: ⬇️ Download ${{ matrix.service }} JAR
         uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.service }}-jar
           path: ${{ matrix.service }}/target
 
-      - name: Build Docker image for ${{ matrix.service }}
+      - name: 🐳 Build Docker image for ${{ matrix.service }}
         run: |
           JAR_PATH=${{ matrix.service }}/target/*.jar
-          IMAGE=$ECR_REGISTRY/${{ matrix.service }}:${GITHUB_SHA}
+          IMAGE=$ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }}
+
           docker build \
-            -f .docker/Dockerfile \
+            -f ./.docker/Dockerfile \
             --build-arg JAR_FILE=$JAR_PATH \
             -t $IMAGE \
             .
+
           docker save $IMAGE -o image-${{ matrix.service }}.tar
 
-      - name: Upload image tar
+      - name: 📦 Upload image tar
         uses: actions/upload-artifact@v4
         with:
           name: image-${{ matrix.service }}-tar
@@ -83,28 +85,26 @@ jobs:
     needs: docker-build
     runs-on: ubuntu-latest
     strategy:
-      matrix: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
+      matrix:
+        service: *service_list
+
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: Download image tar for ${{ matrix.service }}
+      - name: ⬇️ Download image tar for ${{ matrix.service }}
         uses: actions/download-artifact@v4
         with:
           name: image-${{ matrix.service }}-tar
           path: .
 
-      - name: Configure AWS credentials
+      - name: 🔐 Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: arn:aws:iam::376907302485:role/AWS_LABS_OIDC_DEPLOYER
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Login to Amazon ECR
+      - name: 🔐 Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Load & push ${{ matrix.service }} to ECR
-        run: |
-          IMAGE=$ECR_REGISTRY/${{ matrix.service }}:${GITHUB_SHA}
-          docker load -i image-${{ matrix.service }}.tar
-          docker push $IMAGE
+      - name: 🚀 Load & push ${{
