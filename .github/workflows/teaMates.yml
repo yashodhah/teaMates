@@ -60,12 +60,6 @@ jobs:
           name: ${{ matrix.service }}-jar
           path: artifacts/${{ matrix.service }}
 
-      - name: 🔐 Login to ECR
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: ${{ secrets.OIDC_ROLE }}
-          aws-region: ${{ env.AWS_REGION }}
-
       - name: 🐳 Build ${{ matrix.service }}
         run: |
           JAR=$(ls artifacts/${{ matrix.service }}/*.jar)
