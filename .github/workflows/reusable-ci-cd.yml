@@ -72,7 +72,7 @@ jobs:
       - name: Build & save ${{ matrix.service }} image
         run: |
           JAR=$(ls artifacts/${{ matrix.service }}/*.jar)
-          IMAGE=${{ inputs.ecr_registry }}/${{ matrix.service }}:${{ github.sha }}
+          IMAGE=${{ env.ecr_registry }}/${{ matrix.service }}:${{ github.sha }}
           docker build \
             -f .docker/Dockerfile \
             --build-arg JAR_FILE=$JAR \
@@ -111,6 +111,6 @@ jobs:
 
       - name: Load & push ${{ matrix.service }} image
         run: |
-          IMAGE=${{ inputs.ecr_registry }}/${{ matrix.service }}:${{ github.sha }}
+          IMAGE=${{ env.ecr_registry }}/${{ matrix.service }}:${{ github.sha }}
           docker load -i image-${{ matrix.service }}.tar
           docker push $IMAGE

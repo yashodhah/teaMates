@@ -20,6 +20,5 @@ jobs:
     with:
       services: |
         ["order-service","order-processing-service","notification-service"]
-      ecr_registry: ${{ env.ECR_REGISTRY }}
     secrets:
       OIDC_ROLE: arn:aws:iam::376907302485:role/AWS_LABS_OIDC_DEPLOYER
