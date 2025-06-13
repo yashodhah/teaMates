@@ -107,4 +107,8 @@ jobs:
       - name: 🔐 Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: 🚀 Load & push ${{
+      - name: 🚀 Load & push ${{ matrix.service }} to ECR
+        run: |
+          IMAGE=$ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }}
+          docker load -i image-${{ matrix.service }}.tar
+          docker push $IMAGE
