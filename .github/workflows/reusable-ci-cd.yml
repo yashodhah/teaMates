@@ -1,4 +1,3 @@
-# .github/workflows/reusable-ci-cd.yml
 name: Reusable TeaMates CI/CD
 
 on:
@@ -11,7 +10,6 @@ on:
         type: string
         required: true
       aws_region:
-        description: 'AWS Region (e.g. ap-southeast-1)'
         type: string
         required: true
     secrets:
@@ -19,90 +17,50 @@ on:
         required: true
 
 jobs:
-  build:
-    name: Build JARs
+  compile:
+    name: Compile Services
     runs-on: ubuntu-latest
     strategy:
       matrix:
         service: ${{ fromJson(inputs.services) }}
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Java 21
+      - name: ☕ Set up Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
 
-      - name: Build ${{ matrix.service }}
+      - name: 🔨 Compile ${{ matrix.service }}
         run: ./mvnw -B clean package -pl ${{ matrix.service }} -am -DskipTests
 
-      - name: Upload ${{ matrix.service }} JAR
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.service }}-jar
-          path: ${{ matrix.service }}/target/*.jar
-
-  docker-build:
-    name: Build Docker images
-    needs: build
+  docker-build-push:
+    name: Build & Push Docker Images
+    needs: compile
     runs-on: ubuntu-latest
     strategy:
       matrix:
         service: ${{ fromJson(inputs.services) }}
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: Download ${{ matrix.service }} JAR
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ matrix.service }}-jar
-          path: artifacts/${{ matrix.service }}
-
-      - name: Build & save ${{ matrix.service }} image
-        run: |
-          JAR=$(ls artifacts/${{ matrix.service }}/*.jar)
-          IMAGE=${{ inputs.ECR_REGISTRY }}/${{ matrix.service }}:${{ github.sha }}
-          docker build \
-            -f .docker/Dockerfile \
-            --build-arg JAR_FILE=$JAR \
-            -t $IMAGE \
-            .
-          docker save $IMAGE -o image-${{ matrix.service }}.tar
-
-      - name: Upload image tar
-        uses: actions/upload-artifact@v4
-        with:
-          name: image-${{ matrix.service }}-tar
-          path: image-${{ matrix.service }}.tar
-
-  docker-push:
-    name: Push to ECR
-    needs: docker-build
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        service: ${{ fromJson(inputs.services) }}
-    steps:
-      - name: Download image tar
-        uses: actions/download-artifact@v4
-        with:
-          name: image-${{ matrix.service }}-tar
-          path: .
-
-      - name: Configure AWS credentials
+      - name: 🔐 Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.OIDC_ROLE }}
           aws-region: ${{ inputs.aws_region }}
 
-      - name: Log in to ECR
+      - name: 🔐 Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Load & push ${{ matrix.service }} image
+      - name: 🐳 Build & Push ${{ matrix.service }} Docker image
         run: |
-          IMAGE=${{ inputs.ECR_REGISTRY }}/${{ matrix.service }}:${{ github.sha }}
-          docker load -i image-${{ matrix.service }}.tar
+          IMAGE=${{ inputs.ecr_registry }}/${{ matrix.service }}:${{ github.sha }}
+          docker build \
+            -f .docker/Dockerfile \
+            --build-arg JAR_FILE=${{ matrix.service }}/target/*.jar \
+            -t $IMAGE .
           docker push $IMAGE
