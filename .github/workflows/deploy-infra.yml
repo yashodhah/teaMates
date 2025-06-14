@@ -1,0 +1,23 @@
+name: Deploy Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      aws_region:
+        description: "AWS region (default: ap-southeast-1)"
+        required: false
+      ecr_registry:
+        description: "ECR registry URL"
+        required: false
+      services:
+        description: "Comma-separated list of services to deploy"
+        required: false
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/reusable-infra-deploy.yml
+    with:
+      aws_region: ${{ inputs.aws_region || 'ap-southeast-1' }}
+      ecr_registry: ${{ inputs.ecr_registry || '376907302485.dkr.ecr.ap-southeast-1.amazonaws.com/teamates' }}
+    secrets:
+      OIDC_ROLE: arn:aws:iam::376907302485:role/AWS_LABS_OIDC_DEPLOYER

@@ -35,9 +35,9 @@ jobs:
 
       - name: 🔨 Compile ${{ matrix.service }}
         run: ./mvnw -B clean compile -pl ${{ matrix.service }} -am -DskipTests
-
   build-and-push:
     name: Build JAR & Push Docker
+    needs: compile
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -72,3 +72,62 @@ jobs:
             --build-arg JAR_FILE=${{ matrix.service }}/target/*.jar \
             -t $IMAGE .
           docker push $IMAGE
+    
+
+  provision-infra:
+    name: Provision Infrastructure
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .deployments/aws
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ☁️ Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.5
+
+      - name: 🔐 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.OIDC_ROLE }}
+          aws-region: ${{ inputs.aws_region }}
+
+      - name: 🧪 Terraform Init
+        run: terraform init
+
+      - name: 📋 Terraform Plan
+        run: terraform plan
+
+      - name: 🚀 Terraform Apply
+        run: terraform apply -auto-approve
+  destroy-infra:
+    name: 🔥 Destroy Infrastructure (Manual)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    defaults:
+      run:
+        working-directory: .deployments/aws
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ☁️ Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.5
+
+      - name: 🔐 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.OIDC_ROLE }}
+          aws-region: ${{ inputs.aws_region }}
+
+      - name: 🔄 Terraform Init
+        run: terraform init
+
+      - name: 🔥 Terraform Destroy
+        run: terraform destroy -auto-approve
+
