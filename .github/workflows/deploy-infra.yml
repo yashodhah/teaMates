@@ -18,6 +18,7 @@ jobs:
     defaults:
       run:
         working-directory: .deployments/aws
+
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
@@ -37,12 +38,23 @@ jobs:
         run: |
           echo 'ecr_registry = "${{ secrets.ECR_REGISTRY }}"' > ci.auto.tfvars
 
+      - name: 🪵 Enable Terraform Debug Logging
+        run: |
+          echo "TF_LOG=INFO" >> $GITHUB_ENV
+          echo "TF_LOG_PATH=terraform-debug.log" >> $GITHUB_ENV
+
       - name: 🧪 Terraform Init
-        run: terraform init
+        run: terraform init -input=false -no-color
 
       - name: 📋 Terraform Plan
-        run: terraform plan -out=tfplan.binary
+        run: terraform plan -input=false -no-color -out=tfplan.binary
 
       - name: 🚀 Terraform Apply
-        run: terraform apply tfplan.binary
+        run: terraform apply -input=false -no-color tfplan.binary
 
+      - name: 📤 Upload Terraform Debug Logs (if failed)
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: terraform-debug
+          path: .deployments/aws/terraform-debug.log
