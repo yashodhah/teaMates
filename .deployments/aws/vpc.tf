@@ -3,13 +3,13 @@ module "vpc" {
   version = "5.18.1"
 
   name = local.name
-  cidr = local.vpc_cidr
+  cidr = "10.0.0.0/16"
 
   azs              = ["ap-southeast-1a", "ap-southeast-1b", "ap-southeast-1c"]
-  public_subnets   = ["10.0.0.0/20", "10.0.16.0/20", "10.0.32.0/20"]
-  private_subnets  = ["10.0.48.0/20", "10.0.64.0/20", "10.0.80.0/20"]
-  database_subnets = ["10.0.96.0/20", "10.0.112.0/20", "10.0.128.0/20"]
-  intra_subnets    = ["10.0.144.0/20", "10.0.160.0/20", "10.0.176.0/20"]
+  public_subnets   = ["10.16.48.0/20", "10.16.112.0/20", "10.16.176.0/20"] # Web tier
+  private_subnets  = ["10.16.16.0/20", "10.16.80.0/20", "10.16.144.0/20"]  # App tier
+  database_subnets = ["10.16.32.0/20", "10.16.96.0/20", "10.16.160.0/20"]  # DB tier
+  intra_subnets    = ["10.16.0.0/20", "10.16.64.0/20", "10.16.128.0/20"]   # Reserved tier
 
   create_database_subnet_group  = true
   manage_default_network_acl    = false
