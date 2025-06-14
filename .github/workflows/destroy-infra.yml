@@ -33,6 +33,10 @@ jobs:
           role-to-assume: ${{ secrets.OIDC_ROLE }}
           aws-region: ${{ inputs.aws_region || secrets.AWS_REGION }}
 
+      - name: 📝 Write tfvars from secret
+        run: |
+          echo 'ecr_registry = "${{ secrets.ECR_REGISTRY }}"' > ci.auto.tfvars
+
       - name: 🧪 Terraform Init
         run: terraform init -input=false -no-color
 
