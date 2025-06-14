@@ -43,4 +43,6 @@ build/
 ### TerraForm ###
 .terraform/
 .terraform.lock.hcl
+*.tfvars
+
 

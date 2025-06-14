@@ -21,7 +21,7 @@ module "ecs" {
           cpu       = 512
           memory    = 1024
           essential = true
-          image     = "376907302485.dkr.ecr.ap-southeast-1.amazonaws.com/order-service:latest"
+          image = "${var.ecr_registry}/order-service:latest"
 
           port_mappings = [{
             containerPort = 8080
@@ -74,7 +74,7 @@ module "ecs" {
           cpu       = 512
           memory    = 1024
           essential = true
-          image     = "376907302485.dkr.ecr.ap-southeast-1.amazonaws.com/order-processing-service:latest"
+          image = "${var.ecr_registry}/order-processing-service:latest"
 
           port_mappings = [{
             containerPort = 8081
@@ -106,14 +106,6 @@ module "ecs" {
           to_port     = 0
           protocol    = "-1"
           cidr_blocks = ["0.0.0.0/0"]
-        }
-      }
-
-      load_balancer = {
-        service = {
-          target_group_arn = module.alb.target_groups["order-processing-service"].arn
-          container_name   = "order-processing-service"
-          container_port   = 8081
         }
       }
     }

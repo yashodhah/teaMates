@@ -4,10 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       aws_region:
-        description: "AWS region (default: ap-southeast-1)"
-        required: false
-      ecr_registry:
-        description: "ECR registry URL"
+        description: "AWS region"
         required: false
 
 permissions:
@@ -34,6 +31,10 @@ jobs:
         with:
           role-to-assume: ${{ secrets.OIDC_ROLE }}
           aws-region: ${{ inputs.aws_region || secrets.AWS_REGION }}
+
+      - name: 📝 Write tfvars from secret
+        run: |
+          echo 'ecr_registry = "${{ secrets.ECR_REGISTRY }}"' > ci.auto.tfvars
 
       - name: 🧪 Terraform Init
         run: terraform init
