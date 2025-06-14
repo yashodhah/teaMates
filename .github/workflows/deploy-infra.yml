@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   deploy:
+    if: github.actor == 'yashodhah'
     runs-on: ubuntu-latest
     defaults:
       run:
