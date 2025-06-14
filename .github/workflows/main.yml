@@ -61,9 +61,16 @@ jobs:
 
       - name: 🐳 Build & Push ${{ matrix.service }} Docker image
         run: |
-          IMAGE=${{ secrets.ECR_REGISTRY }}/${{ matrix.service }}:${{ github.sha }}
+          IMAGE_BASE=${{ secrets.ECR_REGISTRY }}/${{ matrix.service }}
+          IMAGE_SHA=$IMAGE_BASE:${{ github.sha }}
+          IMAGE_LATEST=$IMAGE_BASE:latest
+
           docker build \
             -f .docker/Dockerfile \
             --build-arg JAR_FILE=${{ matrix.service }}/target/*.jar \
-            -t $IMAGE .
-          docker push $IMAGE
+            -t $IMAGE_SHA \
+            -t $IMAGE_LATEST .
+
+          docker push $IMAGE_SHA
+          docker push $IMAGE_LATEST
+      
