@@ -3,7 +3,11 @@ name: TeaMates CI/CD
 
 on:
   push:
-    branches: ['**']
+    branches:
+      - main
+      - release/**
+      - production
+
 
 permissions:
   id-token: write
