@@ -1,0 +1,39 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: order-processing-service
+  datasource:
+    url: jdbc:h2:mem:orderprocessingdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    database-platform: org.hibernate.dialect.H2Dialect
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+  endpoint:
+    health:
+      enabled: true
+
+#  tracing:
+#    sampling:
+#      probability: 1.0
+#
+#  otlp:
+#    tracing:
+#      endpoint: http://localhost:4318/v1/traces

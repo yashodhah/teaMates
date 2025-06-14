@@ -1,0 +1,10 @@
+mydrugs:
+  messaging:
+    sqs:
+      queueName: ${SQS_QUEUE_NAME}
+
+spring:
+  cloud:
+    aws:
+      region:
+        static: ap-southeast-1

@@ -1,0 +1,14 @@
+mydrugs:
+  messaging:
+    sqs:
+      queueName: ${SQS_QUEUE_NAME:}
+
+spring:
+  cloud:
+    aws:
+      region:
+        static: ap-southeast-1
+#      credentials:
+#        profile:
+#          name: dev
+#          path: /Users/yashodhah/.aws/config

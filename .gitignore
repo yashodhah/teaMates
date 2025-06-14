@@ -37,3 +37,10 @@ build/
 
 ### Mac OS ###
 .DS_Store
+.env
+
+
+### TerraForm ###
+.terraform/
+.terraform.lock.hcl
+

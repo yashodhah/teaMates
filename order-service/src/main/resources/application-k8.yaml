@@ -1,0 +1,11 @@
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      retries: 3
+      delivery-timeout: 5000ms # Fail after 5 seconds if Kafka is unreachable
+      properties:
+        request.timeout.ms: 3000  # Timeout a single request in 3s
+        retry.backoff.ms: 1000    # Wait 1s before each retry
+    template:
+      observation-enabled: true
