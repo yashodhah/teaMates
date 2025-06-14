@@ -9,15 +9,37 @@ on:
       ecr_registry:
         description: "ECR registry URL"
         required: false
-      services:
-        description: "Comma-separated list of services to deploy"
-        required: false
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   deploy:
-    uses: ./.github/workflows/reusable-infra-deploy.yml
-    with:
-      aws_region: ${{ inputs.aws_region || 'ap-southeast-1' }}
-      ecr_registry: ${{ inputs.ecr_registry || '376907302485.dkr.ecr.ap-southeast-1.amazonaws.com/teamates' }}
-    secrets:
-      OIDC_ROLE: arn:aws:iam::376907302485:role/AWS_LABS_OIDC_DEPLOYER
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .deployments/aws
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ☁️ Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.5
+
+      - name: 🔐 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.OIDC_ROLE }}
+          aws-region: ${{ inputs.aws_region || secrets.AWS_REGION }}
+
+      - name: 🧪 Terraform Init
+        run: terraform init
+
+      - name: 📋 Terraform Plan
+        run: terraform plan
+
+      - name: 🚀 Terraform Apply
+        run: terraform apply -auto-approve
