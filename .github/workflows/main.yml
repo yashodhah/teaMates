@@ -4,8 +4,7 @@ on:
   push:
     branches:
       - main
-      - release/**
-      - production
+      - feature
 
 permissions:
   id-token: write
