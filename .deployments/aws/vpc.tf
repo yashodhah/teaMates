@@ -11,7 +11,7 @@ module "vpc" {
   database_subnets = ["10.16.32.0/20", "10.16.96.0/20", "10.16.160.0/20"]  # DB tier
   intra_subnets    = ["10.16.0.0/20", "10.16.64.0/20", "10.16.128.0/20"]   # Reserved tier
 
-  create_database_subnet_group  = true
+  create_database_subnet_group  = false
   manage_default_network_acl    = false
   manage_default_route_table    = false
   manage_default_security_group = false
