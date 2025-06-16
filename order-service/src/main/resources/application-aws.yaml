@@ -7,8 +7,5 @@ spring:
   cloud:
     aws:
       region:
-        static: ap-southeast-1
-#      credentials:
-#        profile:
-#          name: dev
-#          path: /Users/yashodhah/.aws/config
+        static: ${AWS_REGION:ap-southeast-1}
+

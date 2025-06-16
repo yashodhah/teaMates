@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
-@Profile("aws")
 @Slf4j
 @Service
 public class SQSOrderEventPublisher implements EventPublisher<Order> {

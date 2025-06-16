@@ -5,7 +5,7 @@ provider "aws" {
 locals {
   project = "teammates"
   env     = "dev"
-  name    = "${local.project}-${local.env}-vpc"
+  name    = "${local.project}-${local.env}"
   region = "ap-southeast-1"
 
   tags = {

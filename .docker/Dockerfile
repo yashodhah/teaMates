@@ -1,5 +1,5 @@
 # /.docker/Dockerfile
-FROM eclipse-temurin:21
+FROM eclipse-temurin:21-jdk-alpine
 
 # build-time var pointing to the JAR on disk
 ARG JAR_FILE

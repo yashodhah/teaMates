@@ -11,6 +11,7 @@ module "ecs" {
     }
   }
 
+
   services = {
     order-service = {
       cpu    = 512
@@ -23,6 +24,11 @@ module "ecs" {
           essential = true
           image = "${var.ecr_registry}/order-service:latest"
 
+          environment = [
+            { name = "SPRING_PROFILES_ACTIVE", value = "aws" },
+            { name = "SQS_QUEUE_NAME", value = "mydrugs_orderPlaced" }
+          ]
+
           port_mappings = [{
             containerPort = 8080
             hostPort      = 8080
@@ -34,6 +40,7 @@ module "ecs" {
           }
 
           enable_cloudwatch_logging = true
+          readonly_root_filesystem = false
         }
       }
 
@@ -63,6 +70,22 @@ module "ecs" {
           container_port   = 8080
         }
       }
+
+      tasks_iam_role_name        = "${local.name}-order-service-task-role"
+      tasks_iam_role_description = "IAM role for order-service ECS task to send messages to SQS"
+
+      tasks_iam_role_statements = [
+        {
+          actions = [
+            "sqs:SendMessage",
+            "sqs:GetQueueAttributes",
+            "sqs:GetQueueUrl"
+          ]
+          resources = [
+            module.sqs_queue.queue_arn  # Reference to your SQS module's output
+          ]
+        }
+      ]
     }
 
     order-processing-service = {
@@ -75,18 +98,23 @@ module "ecs" {
           memory    = 1024
           essential = true
           image = "${var.ecr_registry}/order-processing-service:latest"
+          environment = [
+            { name = "SPRING_PROFILES_ACTIVE", value = "aws" },
+            { name = "SQS_QUEUE_NAME", value = "mydrugs_orderPlaced" }
+          ]
 
           port_mappings = [{
-            containerPort = 8081
-            hostPort      = 8081
+            containerPort = 8082
+            hostPort      = 8082
             protocol      = "tcp"
           }]
 
           health_check = {
-            command = ["CMD-SHELL", "curl -f http://localhost:8081/actuator/health || exit 1"]
+            command = ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
           }
 
           enable_cloudwatch_logging = true
+          readonly_root_filesystem = false
         }
       }
 
@@ -95,8 +123,8 @@ module "ecs" {
       security_group_rules = {
         alb_ingress = {
           type                     = "ingress"
-          from_port                = 8081
-          to_port                  = 8081
+          from_port                = 8082
+          to_port                  = 8082
           protocol                 = "tcp"
           source_security_group_id = module.alb.security_group_id
         }
@@ -108,6 +136,23 @@ module "ecs" {
           cidr_blocks = ["0.0.0.0/0"]
         }
       }
+
+      tasks_iam_role_name        = "${local.name}-order-process-task-role"
+      tasks_iam_role_description = "IAM role for order-processing-service ECS task to poll messages from SQS"
+
+      tasks_iam_role_statements = [
+        {
+          actions = [
+            "sqs:ReceiveMessage",
+            "sqs:DeleteMessage",
+            "sqs:GetQueueAttributes",
+            "sqs:GetQueueUrl"
+          ]
+          resources = [
+            module.sqs_queue.queue_arn
+          ]
+        }
+      ]
     }
   }
 
