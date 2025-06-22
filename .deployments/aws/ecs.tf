@@ -1,3 +1,32 @@
+locals {
+  ecr_and_logs_policy = {
+    name   = "execution-policy"
+    policy = jsonencode({
+      Version = "2012-10-17",
+      Statement = [
+        {
+          Effect = "Allow",
+          Action = [
+            "ecr:GetAuthorizationToken",
+            "ecr:BatchCheckLayerAvailability",
+            "ecr:GetDownloadUrlForLayer",
+            "ecr:BatchGetImage"
+          ],
+          Resource = "*"
+        },
+        {
+          Effect = "Allow",
+          Action = [
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+          ],
+          Resource = "*"
+        }
+      ]
+    })
+  }
+}
+
 module "ecs" {
   source = "terraform-aws-modules/ecs/aws"
 
@@ -71,6 +100,10 @@ module "ecs" {
         }
       }
 
+      task_exec_iam_role_policies = {
+        ecr_and_logs = local.ecr_and_logs_policy
+      }
+
       tasks_iam_role_name        = "${local.name}-order-service-task-role"
       tasks_iam_role_description = "IAM role for order-service ECS task to send messages to SQS"
 
@@ -84,6 +117,7 @@ module "ecs" {
           resources = [
             module.sqs_queue.queue_arn  # Reference to your SQS module's output
           ]
+
         }
       ]
     }
@@ -110,7 +144,7 @@ module "ecs" {
           }]
 
           health_check = {
-            command = ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+            command = ["CMD-SHELL", "curl -f http://localhost:8082/actuator/health || exit 1"]
           }
 
           enable_cloudwatch_logging = true
@@ -121,13 +155,6 @@ module "ecs" {
       subnet_ids = module.vpc.private_subnets
 
       security_group_rules = {
-        alb_ingress = {
-          type                     = "ingress"
-          from_port                = 8082
-          to_port                  = 8082
-          protocol                 = "tcp"
-          source_security_group_id = module.alb.security_group_id
-        }
         egress_all = {
           type        = "egress"
           from_port   = 0
