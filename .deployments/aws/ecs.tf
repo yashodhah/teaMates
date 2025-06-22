@@ -1,4 +1,4 @@
-module "ecs" {
+module "ecs_cluster" {
   source = "terraform-aws-modules/ecs/aws//modules/cluster"
 
   cluster_name = local.name
@@ -28,6 +28,8 @@ module "ecs" {
 module "ecs_service" {
   source = "terraform-aws-modules/ecs/aws//modules/service"
   name   = "order-service"
+  cluster_arn = module.ecs_cluster.arn
+
   cpu    = 512
   memory = 1024
 
