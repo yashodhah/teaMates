@@ -1,32 +1,3 @@
-locals {
-  ecr_and_logs_policy = {
-    name   = "execution-policy"
-    policy = jsonencode({
-      Version = "2012-10-17",
-      Statement = [
-        {
-          Effect = "Allow",
-          Action = [
-            "ecr:GetAuthorizationToken",
-            "ecr:BatchCheckLayerAvailability",
-            "ecr:GetDownloadUrlForLayer",
-            "ecr:BatchGetImage"
-          ],
-          Resource = "*"
-        },
-        {
-          Effect = "Allow",
-          Action = [
-            "logs:CreateLogStream",
-            "logs:PutLogEvents"
-          ],
-          Resource = "*"
-        }
-      ]
-    })
-  }
-}
-
 module "ecs" {
   source = "terraform-aws-modules/ecs/aws"
 
@@ -100,10 +71,6 @@ module "ecs" {
         }
       }
 
-      task_exec_iam_role_policies = {
-        ecr_and_logs = local.ecr_and_logs_policy
-      }
-
       tasks_iam_role_name        = "${local.name}-order-service-task-role"
       tasks_iam_role_description = "IAM role for order-service ECS task to send messages to SQS"
 
@@ -118,6 +85,22 @@ module "ecs" {
             module.sqs_queue.queue_arn  # Reference to your SQS module's output
           ]
 
+        },
+        {
+          actions = [
+            "ecr:GetAuthorizationToken",
+            "ecr:BatchCheckLayerAvailability",
+            "ecr:GetDownloadUrlForLayer",
+            "ecr:BatchGetImage"
+          ]
+          resources = ["*"]
+        },
+        {
+          actions = [
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+          ]
+          resources = ["*"]
         }
       ]
     }
@@ -178,6 +161,22 @@ module "ecs" {
           resources = [
             module.sqs_queue.queue_arn
           ]
+        },
+        {
+          actions = [
+            "ecr:GetAuthorizationToken",
+            "ecr:BatchCheckLayerAvailability",
+            "ecr:GetDownloadUrlForLayer",
+            "ecr:BatchGetImage"
+          ]
+          resources = ["*"]
+        },
+        {
+          actions = [
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+          ]
+          resources = ["*"]
         }
       ]
     }
