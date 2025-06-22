@@ -2,8 +2,12 @@ name: TeaMates CI/CD
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+    paths:                     # ──▶ trigger only if ANY of these paths change
+      - 'pom.xml'              # root POM
+      - 'order-service/**'
+      - 'order-processing-service/**'
+      - 'notification-service/**'
 
 permissions:
   id-token: write
