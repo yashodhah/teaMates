@@ -6,11 +6,11 @@ locals {
   project = "teammates"
   env     = "dev"
   name    = "${local.project}-${local.env}"
-  region = "ap-southeast-1"
+  region  = "ap-southeast-1"
 
   tags = {
-    Project     = local.project
-    CreatedBy   = "terraform"
+    Project   = local.project
+    CreatedBy = "terraform"
   }
 }
 

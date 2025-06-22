@@ -41,11 +41,11 @@ module "alb" {
 
   target_groups = {
     order-service = {
-      name                             = "tg-order-service"
-      backend_protocol                 = "HTTP"
-      backend_port                     = 8080
-      target_type                      = "ip"
-      deregistration_delay             = 5
+      name                              = "tg-order-service"
+      backend_protocol                  = "HTTP"
+      backend_port                      = 8080
+      target_type                       = "ip"
+      deregistration_delay              = 5
       load_balancing_cross_zone_enabled = true
 
       health_check = {
@@ -60,7 +60,7 @@ module "alb" {
         unhealthy_threshold = 2
       }
 
-      create_attachment = false  # ECS will handle it
+      create_attachment = false # ECS will handle it
     }
   }
 
