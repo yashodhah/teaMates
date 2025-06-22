@@ -50,11 +50,17 @@ jobs:
         run: terraform plan -input=false -no-color -out=tfplan.binary
 
       - name: 🚀 Terraform Apply
+        id: apply
+        continue-on-error: true
         run: terraform apply -input=false -no-color tfplan.binary
 
       - name: 📤 Upload Terraform Debug Logs (if failed)
-        if: failure()
+        if: steps.apply.outcome == 'failure'
         uses: actions/upload-artifact@v4
         with:
           name: terraform-debug
           path: .deployments/aws/terraform-debug.log
+
+      - name: 💣 Auto-Destroy on Failed Apply
+        if: steps.apply.outcome == 'failure'
+        run: terraform destroy -auto-approve -input=false -no-color
