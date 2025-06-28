@@ -13,9 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.Map;
 
 @Slf4j
-@Service
 public class SQSOrderEventPublisher implements EventPublisher<Order> {
-
     private final ObjectMapper objectMapper;
     private final SqsTemplate sqsTemplate;
     private final SQSProperties sqsProperties;
@@ -33,7 +31,7 @@ public class SQSOrderEventPublisher implements EventPublisher<Order> {
     public void publishEvent(Order order) {
         try {
             String messageBody = objectMapper.writeValueAsString(order);
-            SendResult<String> result = sqsTemplate.send(to -> to
+            sqsTemplate.send(to -> to
                     .payload(messageBody)
                     .queue(sqsProperties.getQueueName())
                     .headers(Map.of("key", "value"))

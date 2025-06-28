@@ -19,11 +19,11 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
-    private final EventPublisher orderEventPublisher;
+    private final EventPublisher<Order> orderEventPublisher;
 
     public OrderService(OrderRepository orderRepository,
                         ProductRepository productRepository,
-                        EventPublisher orderEventPublisher) {
+                        EventPublisher<Order> orderEventPublisher) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.orderEventPublisher = orderEventPublisher;
