@@ -1,12 +1,14 @@
 package com.mydrugs.orderprocessing.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mydrugs.orderprocessing.messaging.OrderProcessingSQSListener;
+import com.mydrugs.orderprocessing.service.OrderProcessingService;
 import io.awspring.cloud.sqs.config.SqsListenerConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class OrderProcessingAWSConfiguration {
+public class AWSConfiguration {
 
 //    @Bean
 //    @ConfigurationProperties(prefix = "mydrugs.messaging.sqs")
@@ -37,4 +39,9 @@ public class OrderProcessingAWSConfiguration {
         return registrar -> registrar.setObjectMapper(objectMapper);
     }
 
+    @Bean
+    OrderProcessingSQSListener orderProcessingSQSListener (OrderProcessingService orderProcessingService,
+                                                          ObjectMapper objectMapper) {
+        return new OrderProcessingSQSListener(orderProcessingService, objectMapper);
+    }
 }

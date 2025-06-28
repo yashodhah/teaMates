@@ -15,7 +15,7 @@ import java.util.Map;
 
 @Profile("k8")
 @Configuration
-public class K8Configuration {
+public class KafkaConfiguration {
     // Configuration specific to Kubernetes environment can be added here.
     // This class can be used to define beans or properties that are only applicable when the 'k8' profile is active.
 
